@@ -24,6 +24,8 @@ namespace PlayerControls
 
         //Player's Rigidbody
         private Rigidbody _rb;
+        
+        public float currentSpeed;
 
         void Start()
         {
@@ -32,6 +34,7 @@ namespace PlayerControls
 
         private void Update()
         {
+            currentSpeed = _rb.velocity.magnitude * 3.6f; // m/s'yi km/s'ye çevirir
             SideMovement();
         }
 
@@ -43,7 +46,7 @@ namespace PlayerControls
         private void ConstMovement()
         {
             //_rb.transform.Translate(0,0,ınputZ*movementSpeed*Time.fixedDeltaTime);
-            _rb.AddForce(Vector3.back * (movementSpeed * Time.fixedDeltaTime));
+            _rb.AddForce(Vector3.forward * (movementSpeed * Time.fixedDeltaTime));
         }
         private void SideMovement()
         {

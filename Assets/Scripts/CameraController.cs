@@ -5,15 +5,17 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     public Transform target;
-    public float distance = 10f;
-    public float height = 5f;
+    //public float distance = 10f;
+    //public float height = 5f;
     public float smoothSpeed = 0.125f;
 
     private Vector3 offset;
 
     void Start()
     {
-        offset = new Vector3(0f, height, distance);
+        //offset = new Vector3(0f, height, distance);
+        offset = transform.position - target.position;
+
     }
 
     void LateUpdate()
