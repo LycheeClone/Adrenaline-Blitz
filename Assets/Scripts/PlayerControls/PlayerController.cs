@@ -3,44 +3,79 @@ using UnityEngine;
 
 namespace PlayerControls
 {
-    public class PlayerMovement : MonoBehaviour
+    public class PlayerController : MonoBehaviour
     {
-        public float speed = 5f;
-        public float forwardSpeed = 2f;
+        //Default Movement Speed
+        private float _movementSpeed = 400;
 
-        private Rigidbody rb;
+        //Side Direction Move Controller Variable
+        private bool _hasMoved = false;
 
-        void Start()
+        //Player's Rigidbody
+        private Rigidbody _rb;
+
+        //The variable that holds the right to move Left
+        private bool _canMoveLeft = true;
+
+        //the variable that holds the right to move right
+        private bool _canMoveRight = true;
+
+        private void Start()
         {
-            rb = GetComponent<Rigidbody>();
-            rb.useGravity = false;
-            rb.constraints = RigidbodyConstraints.FreezeRotation;
+            _rb = GetComponent<Rigidbody>();
         }
 
-        void FixedUpdate()
+        private void Update()
         {
-            float horizontalInput = Input.GetAxis("Horizontal");
-            float verticalInput = Input.GetAxis("Vertical");
-
-            Vector3 movement = new Vector3(horizontalInput * speed, 0f, forwardSpeed);
-            rb.AddRelativeForce(movement, ForceMode.Force);
-
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                transform.position -= Vector3.right * 2;
-            }
-            else if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                transform.position += Vector3.right * 2;
-            }
+            SideMovement();
         }
 
-        void OnCollisionEnter(Collision collision)
+        private void FixedUpdate()
         {
-            if (collision.gameObject.CompareTag("Obstacle"))
+            ConstMovement();
+        }
+
+        private void ConstMovement()
+        {
+            _rb.AddForce(Vector3.forward * (_movementSpeed * Time.fixedDeltaTime));
+        }
+
+        //Function That Determines the Character's Ability to Move Left and Right
+        private void SideMovement()
+        {
+            if (!_hasMoved)
             {
-                Vector3 normal = collision.contacts[0].normal;
-                rb.velocity = Vector3.Reflect(rb.velocity, normal);
+                if (_canMoveLeft && (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)))
+                {
+                    transform.Translate(-2, 0, 0);
+                    _hasMoved = true;
+                    _canMoveLeft = false;
+                    _canMoveRight = true;
+                }
+                else if (_canMoveRight && (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)))
+                {
+                    transform.Translate(2, 0, 0);
+                    _hasMoved = true;
+                    _canMoveLeft = true;
+                    _canMoveRight = false;
+                }
+            }
+            else
+            {
+                if (_canMoveLeft && (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)))
+                {
+                    transform.Translate(-2, 0, 0);
+                    _hasMoved = false;
+                    _canMoveLeft = false;
+                    _canMoveRight = true;
+                }
+                else if (_canMoveRight && (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)))
+                {
+                    transform.Translate(2, 0, 0);
+                    _hasMoved = false;
+                    _canMoveLeft = true;
+                    _canMoveRight = false;
+                }
             }
         }
     }
