@@ -1,15 +1,10 @@
-using System;
 using UnityEngine;
+using DG.Tweening;
 
 namespace PlayerControls
 {
     public class PlayerController : MonoBehaviour
     {
-        public Transform playerTransform;
-
-        //Default Movement Speed
-        private float _movementSpeed = 1000;
-
         //Side Direction Move Controller Variable
         private bool _hasMoved = false;
 
@@ -22,76 +17,98 @@ namespace PlayerControls
         //the variable that holds the right to move right
         private bool _canMoveRight = true;
 
-        private float hiz = 20f; // Nesnenin başlangıç hızı
-        private float hizArtisi = 1f; // Hız artış miktarı
-        private float zamanlayici = 0.5f; // Hız artışının zamanlayıcısı
-        private float zamanSayaci = 0.0f; // Geçen süreyi tutar
+        // Player's Starting Speed
+        private float _speed = 20f;
 
-        private void Awake()
-        {
-            playerTransform = transform;
-        }
+        // Increase Amount for Increase
+        private float _speedIncrease = 1f;
+
+        // How Many Speed Increases Will be Made Every "timer"
+        private float _timer = 0.5f;
+
+        // Keeps the Elapsed Time
+        private float _timeCounter = 0.0f;
+        private bool _rbFreezevariables;
 
         private void Start()
         {
+            SideMovement();
             _rb = GetComponent<Rigidbody>();
         }
-        void Update() {
+
+        void Update()
+        {
             SideMovement();
-            zamanSayaci += Time.deltaTime;
-            if (zamanSayaci > zamanlayici) {
-                hiz += hizArtisi;
-                zamanSayaci = 0.0f;
-            }
-            print(Time.time);
         }
 
-        void FixedUpdate() {
+        void FixedUpdate()
+        {
+            SpeedBooster();
+
+            ConstMovement();
+
+            GravityControl();
+        }
+
+        //Player's Movement Increase Per _timer variable
+        private void SpeedBooster()
+        {
+            _timeCounter += Time.deltaTime;
+            if (_timeCounter > _timer)
+            {
+                _speed += _speedIncrease;
+                _timeCounter = 0.0f;
+            }
+        }
+
+        private void GravityControl()
+        {
+            //Controls the Behavior of Falling At Specific Locations
             if (transform.position.z >= 500)
             {
                 GetComponent<Rigidbody>().AddForce(Vector3.down * 70, ForceMode.Acceleration);
             }
+
+            //Controls for Return to the Default Gravity
             if (transform.position.z >= 640)
             {
                 Physics.gravity = new Vector3(0, -9.81f, 0);
-                GetComponent<Rigidbody>().velocity = new Vector3(0, 0, GetComponent<Rigidbody>().velocity.z);
-            }
-            Vector3 yon = new Vector3(0, 0, 1); // Yön vektörü, nesnenin ilerleme yönüne göre ayarlanacak
-            _rb.AddForce(yon.normalized * hiz, ForceMode.Acceleration); // Nesneye hız kazandır
-
-            // Maksimum hızı sınırlandır
-            if (_rb.velocity.magnitude > hiz) {
-                _rb.velocity = _rb.velocity.normalized * hiz;
             }
         }
-    
-    //
-    // private void FixedUpdate()
-    //     {
-    //         //ConstMovement();
-    //     }
+
         private void ConstMovement()
         {
-            
-            //_rb.AddForce(Vector3.forward * (_movementSpeed * Time.fixedDeltaTime));
-            
+            Vector3 direction = Vector3.forward;
+            _rb.AddForce(direction.normalized * _speed, ForceMode.Acceleration); // Speed up the object
+
+            // Limit the maximum speed
+            if (_rb.velocity.magnitude > _speed)
+            {
+                _rb.velocity = _rb.velocity.normalized * _speed;
+            }
         }
 
-        //Function That Determines the Character's Ability to Move Left and Right
+
+        //Function That Determines the Character's Right to Move Left and Right
         private void SideMovement()
         {
+            //Checking freeze variables in rigidbody component
+            _rbFreezevariables = GetComponent<Rigidbody>().freezeRotation;
+
             if (!_hasMoved)
             {
-                if (_canMoveLeft && (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)))
+                if (_canMoveLeft && _rbFreezevariables == false &&
+                    (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)))
                 {
-                    transform.Translate(-2, 0, 0);
+                    transform.DOMoveX(-2, 0.25f);
                     _hasMoved = true;
                     _canMoveLeft = false;
                     _canMoveRight = true;
                 }
-                else if (_canMoveRight && (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)))
+                else if (_canMoveRight && _rbFreezevariables == false &&
+                         (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)))
                 {
-                    transform.Translate(2, 0, 0);
+                    transform.DOMoveX(2, 0.25f);
                     _hasMoved = true;
                     _canMoveLeft = true;
                     _canMoveRight = false;
@@ -99,20 +116,32 @@ namespace PlayerControls
             }
             else
             {
-                if (_canMoveLeft && (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)))
+                if (_canMoveLeft && _rbFreezevariables == false &&
+                    (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)))
                 {
-                    transform.Translate(-2, 0, 0);
+                    transform.DOMoveX(-2, 0.25f);
                     _hasMoved = false;
                     _canMoveLeft = false;
                     _canMoveRight = true;
                 }
-                else if (_canMoveRight && (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)))
+                else if (_canMoveRight && _rbFreezevariables == false &&
+                         (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)))
                 {
-                    transform.Translate(2, 0, 0);
+                    transform.DOMoveX(2, 0.25f);
                     _hasMoved = false;
                     _canMoveLeft = true;
                     _canMoveRight = false;
                 }
+            }
+        }
+
+        // Checking For Object Collisions
+        private void OnCollisionEnter(Collision other)
+        {
+            if (other.gameObject.CompareTag("Obstacle"))
+            {
+                DOTween.Kill(transform);
+                GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
             }
         }
     }
