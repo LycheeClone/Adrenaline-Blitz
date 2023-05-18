@@ -1,23 +1,15 @@
-using System;
-using PlayerControls;
 using UnityEngine;
 
 namespace CameraControls
 {
     public class CameraControls : MonoBehaviour
     {
-        //The variable that holds the distance between the player and the camera.
-        private Vector3 Offset;
-
-        //Player's target.
+        private Vector3 _offset;
         private Transform _target;
-
 
         private void Awake()
         {
             _target = GameObject.FindWithTag("Player").transform;
-            //_target = FindObjectOfType<PlayerController>().PlayerTransform;
-            //_target = GetComponent<PlayerController>().PlayerTransform.transform;
             CalculateOffset();
         }
 
@@ -28,14 +20,13 @@ namespace CameraControls
 
         private void CameraFollow()
         {
-            transform.position = _target.position + Offset;
+            transform.position = _target.position + _offset;
             transform.LookAt(_target);
         }
 
-        //Function That Calculates Distance
         private void CalculateOffset()
         {
-            Offset = transform.position - _target.position;
+            _offset = transform.position - _target.position;
         }
     }
 }

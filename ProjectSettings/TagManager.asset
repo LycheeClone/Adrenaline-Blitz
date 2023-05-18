@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Obstacle
   - Ground
+  - GameOver
+  - GameOverImage
+  - EndPoint
   layers:
   - Default
   - TransparentFX

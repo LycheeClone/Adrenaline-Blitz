@@ -1,16 +1,20 @@
+using System;
 using UnityEngine;
 using DG.Tweening;
+using SceneManagers;
 
 namespace PlayerControls
 {
     public class PlayerController : MonoBehaviour
     {
-        //Side Direction Move Controller Variable
-        private bool _hasMoved = false;
-
-        //Player's Rigidbody
+        public GameObject restart;
         private Rigidbody _rb;
 
+        private bool _tempIsFinished;
+        
+        //Side Direction Move Controller Variable
+        private bool _hasMoved = false;
+        
         //The variable that holds the right to move Left
         private bool _canMoveLeft = true;
 
@@ -18,21 +22,23 @@ namespace PlayerControls
         private bool _canMoveRight = true;
 
         // Player's Starting Speed
-        private float _speed = 20f;
+        [SerializeField] private float _speed = 20f;
 
         // Increase Amount for Increase
-        private float _speedIncrease = 1f;
+        [SerializeField] private float _speedIncrease = 1f;
 
         // How Many Speed Increases Will be Made Every "timer"
         private float _timer = 0.5f;
 
         // Keeps the Elapsed Time
         private float _timeCounter = 0.0f;
+        
+        //Player Rigidbody Constraints
         private bool _rbFreezevariables;
 
         private void Start()
         {
-            SideMovement();
+            _tempIsFinished = FindObjectOfType<LevelRestart>().isFinished;
             _rb = GetComponent<Rigidbody>();
         }
 
@@ -141,7 +147,18 @@ namespace PlayerControls
             if (other.gameObject.CompareTag("Obstacle"))
             {
                 DOTween.Kill(transform);
-                GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+                _rb.constraints = RigidbodyConstraints.FreezeAll;
+            }
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.gameObject.CompareTag("EndPoint"))
+            {
+                DOTween.Kill(transform);
+                _rb.constraints = RigidbodyConstraints.FreezeAll;
+                _tempIsFinished = true;
+
             }
         }
     }
