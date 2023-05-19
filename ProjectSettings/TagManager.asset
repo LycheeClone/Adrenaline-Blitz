@@ -7,8 +7,10 @@ TagManager:
   - Obstacle
   - Ground
   - GameOver
-  - GameOverImage
   - EndPoint
+  - WinScreen
+  - Score
+  - CanvasBackground
   layers:
   - Default
   - TransparentFX

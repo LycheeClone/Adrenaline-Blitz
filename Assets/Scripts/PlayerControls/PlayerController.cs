@@ -1,20 +1,19 @@
-using System;
 using UnityEngine;
 using DG.Tweening;
 using SceneManagers;
+using ScoreControls;
 
 namespace PlayerControls
 {
     public class PlayerController : MonoBehaviour
     {
-        public GameObject restart;
         private Rigidbody _rb;
 
-        private bool _tempIsFinished;
-        
+        private ScoreManager _scoreManager;
+
         //Side Direction Move Controller Variable
-        private bool _hasMoved = false;
-        
+        private bool _hasMoved;
+
         //The variable that holds the right to move Left
         private bool _canMoveLeft = true;
 
@@ -22,23 +21,23 @@ namespace PlayerControls
         private bool _canMoveRight = true;
 
         // Player's Starting Speed
-        [SerializeField] private float _speed = 20f;
+        private float _speed = 40f;
 
-        // Increase Amount for Increase
-        [SerializeField] private float _speedIncrease = 1f;
+        // Value For Speed Increase
+        private float _speedIncrease = 1.5f;
 
-        // How Many Speed Increases Will be Made Every "timer"
+        // How Many Speed Increases Will be Made Every "timer" Variable
         private float _timer = 0.5f;
 
         // Keeps the Elapsed Time
-        private float _timeCounter = 0.0f;
-        
+        private float _timeCounter;
+
         //Player Rigidbody Constraints
-        private bool _rbFreezevariables;
+        public bool rbFreezeVariables;
 
         private void Start()
         {
-            _tempIsFinished = FindObjectOfType<LevelRestart>().isFinished;
+            _scoreManager = FindObjectOfType<ScoreManager>();
             _rb = GetComponent<Rigidbody>();
         }
 
@@ -59,11 +58,14 @@ namespace PlayerControls
         //Player's Movement Increase Per _timer variable
         private void SpeedBooster()
         {
-            _timeCounter += Time.deltaTime;
-            if (_timeCounter > _timer)
+            if (!rbFreezeVariables)
             {
-                _speed += _speedIncrease;
-                _timeCounter = 0.0f;
+                _timeCounter += Time.deltaTime;
+                if (_timeCounter > _timer)
+                {
+                    _speed += _speedIncrease;
+                    _timeCounter = 0.0f;
+                }
             }
         }
 
@@ -72,7 +74,7 @@ namespace PlayerControls
             //Controls the Behavior of Falling At Specific Locations
             if (transform.position.z >= 500)
             {
-                GetComponent<Rigidbody>().AddForce(Vector3.down * 70, ForceMode.Acceleration);
+                _rb.AddForce(Vector3.down * 85, ForceMode.Acceleration);
             }
 
             //Controls for Return to the Default Gravity
@@ -82,10 +84,14 @@ namespace PlayerControls
             }
         }
 
+        //Constant Movement In The Z Axis
         private void ConstMovement()
         {
-            Vector3 direction = Vector3.forward;
-            _rb.AddForce(direction.normalized * _speed, ForceMode.Acceleration); // Speed up the object
+            if (!rbFreezeVariables)
+            {
+                Vector3 direction = Vector3.forward;
+                _rb.AddForce(direction.normalized * _speed, ForceMode.Acceleration); // Speed up the object   
+            }
 
             // Limit the maximum speed
             if (_rb.velocity.magnitude > _speed)
@@ -98,23 +104,25 @@ namespace PlayerControls
         //Function That Determines the Character's Right to Move Left and Right
         private void SideMovement()
         {
-            //Checking freeze variables in rigidbody component
-            _rbFreezevariables = GetComponent<Rigidbody>().freezeRotation;
+            //Checks freeze variables in rigidbody component
+            rbFreezeVariables = _rb.freezeRotation;
 
             if (!_hasMoved)
             {
-                if (_canMoveLeft && _rbFreezevariables == false &&
+                if (_canMoveLeft && rbFreezeVariables == false &&
                     (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)))
                 {
                     transform.DOMoveX(-2, 0.25f);
+                    _scoreManager.score++;
                     _hasMoved = true;
                     _canMoveLeft = false;
                     _canMoveRight = true;
                 }
-                else if (_canMoveRight && _rbFreezevariables == false &&
+                else if (_canMoveRight && rbFreezeVariables == false &&
                          (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)))
                 {
                     transform.DOMoveX(2, 0.25f);
+                    _scoreManager.score++;
                     _hasMoved = true;
                     _canMoveLeft = true;
                     _canMoveRight = false;
@@ -122,18 +130,20 @@ namespace PlayerControls
             }
             else
             {
-                if (_canMoveLeft && _rbFreezevariables == false &&
+                if (_canMoveLeft && rbFreezeVariables == false &&
                     (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)))
                 {
                     transform.DOMoveX(-2, 0.25f);
+                    _scoreManager.score++;
                     _hasMoved = false;
                     _canMoveLeft = false;
                     _canMoveRight = true;
                 }
-                else if (_canMoveRight && _rbFreezevariables == false &&
+                else if (_canMoveRight && rbFreezeVariables == false &&
                          (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)))
                 {
                     transform.DOMoveX(2, 0.25f);
+                    _scoreManager.score++;
                     _hasMoved = false;
                     _canMoveLeft = true;
                     _canMoveRight = false;
@@ -141,7 +151,6 @@ namespace PlayerControls
             }
         }
 
-        // Checking For Object Collisions
         private void OnCollisionEnter(Collision other)
         {
             if (other.gameObject.CompareTag("Obstacle"))
@@ -157,8 +166,7 @@ namespace PlayerControls
             {
                 DOTween.Kill(transform);
                 _rb.constraints = RigidbodyConstraints.FreezeAll;
-                _tempIsFinished = true;
-
+                FindObjectOfType<LevelRestart>().isFinished = true;
             }
         }
     }

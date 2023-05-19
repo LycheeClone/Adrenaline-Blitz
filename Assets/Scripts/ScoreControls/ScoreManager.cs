@@ -1,6 +1,5 @@
-using System;
+using PlayerControls;
 using UnityEngine;
-using UnityEngine.Serialization;
 using TMPro;
 
 namespace ScoreControls
@@ -8,16 +7,25 @@ namespace ScoreControls
     public class ScoreManager : MonoBehaviour
     {
         public int score;
-        public int startPosition = -245;
-        public TextMeshProUGUI textMessage;
+        public int startPosition = -239;
+        private TextMeshProUGUI _scoreText;
         private GameObject _playerTransform;
+        private PlayerController _playerController;
 
         private void Start()
         {
+            _playerController = FindObjectOfType<PlayerController>();
+            _scoreText = GetComponent<TextMeshProUGUI>();
             _playerTransform = GameObject.FindWithTag("Player");
         }
 
         private void Update()
+        {
+            ScoreIncreasePerDıstance();
+            _scoreText.text = "Score: " + score;
+        }
+        
+        private void ScoreIncreasePerDıstance()
         {
             var playerTransform2 = _playerTransform.transform.position.z;
 
@@ -25,7 +33,6 @@ namespace ScoreControls
             {
                 score++;
                 startPosition += 100;
-                textMessage.text = "Score: " + score;
             }
         }
     }
